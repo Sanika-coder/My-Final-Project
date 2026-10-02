@@ -1,0 +1,32 @@
+services:
+
+  backend:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+
+    container_name: mern-backend
+
+    ports:
+      - "5000:5000"
+
+    env_file:
+      - ./Backend/.env
+
+    restart: unless-stopped
+
+
+  frontend:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+
+    container_name: mern-frontend
+
+    ports:
+      - "5173:80"
+
+    depends_on:
+      - backend
+
+    restart: unless-stopped
