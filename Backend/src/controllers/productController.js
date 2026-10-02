@@ -1,59 +1,32 @@
 const Product = require("../models/Product");
 
-// Get all products
-const getProducts = async (req, res, next) => {
-  try {
-    const products = await Product.find().sort({ createdAt: -1 });
-
-    res.status(200).json({
-      success: true,
-      count: products.length,
-      data: products,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Get single product
-const getProductById = async (req, res, next) => {
-  try {
-    const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      res.status(404);
-
-      throw new Error("Product not found");
-    }
-
-    res.status(200).json({
-      success: true,
-      data: product,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Create product
-const createProduct = async (req, res, next) => {
+// =====================================================
+// CREATE PRODUCT
+// POST /api/products
+// =====================================================
+const createProduct = async (req, res) => {
   try {
     const {
       name,
-      description,
       price,
+      description,
       category,
-      image,
-      stock,
     } = req.body;
 
+    // Validate required fields
+    if (!name || price === undefined) {
+      return res.status(400).json({
+        success: false,
+        message: "Name and price are required",
+      });
+    }
+
+    // Create product
     const product = await Product.create({
       name,
-      description,
       price,
+      description,
       category,
-      image,
-      stock,
     });
 
     res.status(201).json({
@@ -62,66 +35,166 @@ const createProduct = async (req, res, next) => {
       data: product,
     });
   } catch (error) {
-    next(error);
+    console.error("Create product error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to create product",
+      error: error.message,
+    });
   }
 };
 
-// Update product
-const updateProduct = async (req, res, next) => {
+// =====================================================
+// GET ALL PRODUCTS
+// GET /api/products
+// =====================================================
+const getProducts = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const products = await Product.find().sort({
+      createdAt: -1,
+    });
+
+    res.status(200).json({
+      success: true,
+      count: products.length,
+      data: products,
+    });
+  } catch (error) {
+    console.error("Get products error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to get products",
+      error: error.message,
+    });
+  }
+};
+
+// =====================================================
+// GET SINGLE PRODUCT
+// GET /api/products/:id
+// =====================================================
+const getProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(
+      req.params.id
+    );
 
     if (!product) {
-      res.status(404);
-
-      throw new Error("Product not found");
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
     }
 
-    const updatedProduct = await Product.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+    res.status(200).json({
+      success: true,
+      data: product,
+    });
+  } catch (error) {
+    console.error("Get product error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to get product",
+      error: error.message,
+    });
+  }
+};
+
+// =====================================================
+// UPDATE PRODUCT
+// PUT /api/products/:id
+// =====================================================
+const updateProduct = async (req, res) => {
+  try {
+    const {
+      name,
+      price,
+      description,
+      category,
+    } = req.body;
+
+    const product =
+      await Product.findByIdAndUpdate(
+        req.params.id,
+        {
+          name,
+          price,
+          description,
+          category,
+        },
+        {
+          new: true,
+          runValidators: true,
+        }
+      );
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
+    }
 
     res.status(200).json({
       success: true,
       message: "Product updated successfully",
-      data: updatedProduct,
+      data: product,
     });
   } catch (error) {
-    next(error);
+    console.error("Update product error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to update product",
+      error: error.message,
+    });
   }
 };
 
-// Delete product
-const deleteProduct = async (req, res, next) => {
+// =====================================================
+// DELETE PRODUCT
+// DELETE /api/products/:id
+// =====================================================
+const deleteProduct = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id);
+    const product =
+      await Product.findByIdAndDelete(
+        req.params.id
+      );
 
     if (!product) {
-      res.status(404);
-
-      throw new Error("Product not found");
+      return res.status(404).json({
+        success: false,
+        message: "Product not found",
+      });
     }
-
-    await Product.findByIdAndDelete(req.params.id);
 
     res.status(200).json({
       success: true,
       message: "Product deleted successfully",
+      data: product,
     });
   } catch (error) {
-    next(error);
+    console.error("Delete product error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to delete product",
+      error: error.message,
+    });
   }
 };
 
+// =====================================================
+// EXPORT ALL CONTROLLERS
+// =====================================================
 module.exports = {
-  getProducts,
-  getProductById,
   createProduct,
+  getProducts,
+  getProduct,
   updateProduct,
   deleteProduct,
 };
