@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: backend
+  namespace: mern-app
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: backend
+
+  template:
+    metadata:
+      labels:
+        app: backend
+
+    spec:
+
+      # Allow this MERN backend Pod to run
+      # on the existing Kind node that has
+      # the dedicated=gpu taint.
+      tolerations:
+        - key: "dedicated"
+          operator: "Equal"
+          value: "gpu"
+          effect: "NoSchedule"
+
+      containers:
+        - name: backend
+
+          image: my-final-project-backend:latest
+
+          # Use the image already loaded
+          # into the Kind node.
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 5000
+
+          env:
+
+            - name: PORT
+              value: "5000"
+
+            - name: NODE_ENV
+              value: "production"
+
+            - name: MONGO_URI
+              valueFrom:
+                secretKeyRef:
+                  name: mongodb-secret
+                  key: MONGO_URI
