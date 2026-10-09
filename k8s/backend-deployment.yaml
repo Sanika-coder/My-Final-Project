@@ -19,7 +19,7 @@ spec:
 
     spec:
 
-      # Allow this MERN backend Pod to run
+      # Allow the backend Pod to run
       # on the existing Kind node that has
       # the dedicated=gpu taint.
       tolerations:
@@ -28,17 +28,44 @@ spec:
           value: "gpu"
           effect: "NoSchedule"
 
+      # DNS configuration for MongoDB Atlas
+      dnsConfig:
+        nameservers:
+          - 8.8.8.8
+          - 1.1.1.1
+
       containers:
         - name: backend
 
           image: my-final-project-backend:latest
 
-          # Use the image already loaded
-          # into the Kind node.
+          # Use the image already loaded into Kind
           imagePullPolicy: IfNotPresent
 
           ports:
             - containerPort: 5000
+
+          # Kubernetes liveness check
+          # Checks whether the backend application is alive.
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          # Kubernetes readiness check
+          # Checks whether the backend is ready to receive traffic.
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 5000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 3
 
           env:
 
